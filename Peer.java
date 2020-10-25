@@ -1,9 +1,14 @@
+import java.io.*;
+import java.net.*;
+import java.util.*;
+import java.util.Map.Entry;
+
 class Peer extends Object {
 	private static int connectedByCounter = 1;
 	private static int connectedToCounter = 1;
 	Socket socket;
 	int id;
-	int port;
+	Integer port;
 
 	public Peer(Socket socket) {
 		this.id = connectedByCounter++;
@@ -11,7 +16,7 @@ class Peer extends Object {
 		this.port = socket.getPort();
 	}
 
-	public Peer(Socket socket, int portNumber) {
+	public Peer(Socket socket, Integer portNumber) {
 		this.id = connectedToCounter++;
 		this.socket = socket;
 		this.port = portNumber;
@@ -24,7 +29,7 @@ class Peer extends Object {
 	@Override
 	public String toString() {
 		String ip = socket.getInetAddress().getHostAddress();
-		return id + ": " + ip + "    " + port;
+		return id + ": " + ip + "\t" + port;
 	}
 
 	public void terminate() {
@@ -36,31 +41,30 @@ class Peer extends Object {
 	}
 
 	public void sendMessage(String message) {
-		PrintWriter out;
 		try {
-			out = new PrintWriter(socket.getOutputStream(), true);
+			PrintWriter out = new PrintWriter(this.socket.getOutputStream(), true);
 			out.println(message);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
 
-	public void printMessage() {
-		if (socket.isOutputShutdown()) {
-			return;
-		}
+	public void printMessage(){
 		try {
-			BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+			// Get data from input stream
+			BufferedReader reader = new BufferedReader(new InputStreamReader(this.socket.getInputStream()));
 			String response;
-	        while ((response = reader.readLine()) != null)
-	        {
-	        	System.out.println("Message received from " + socket.getInetAddress());
-				System.out.println("Sender's Port :  <The port no." + port
-						+ " of the sender>");
-				System.out.println("Message:  " + "<\"" + response + "\">");
-	        }
-		} catch (IOException e) {
-			e.printStackTrace();
+
+			// Checks to see if there is any input from remote peer
+			while ((response = reader.readLine()) != null) {
+				System.out.println("Message received from " + this.socket.getInetAddress());
+				System.out.println("Sender's Port : " + port);
+				System.out.println("Message:  " + response + "\n");
+			}
+
+			throw new IOException();
+		} catch (IOException ex) {
+			System.out.println("Connection with " + this.socket.getInetAddress() + " closed.\n");
 		}
 	}
 }
